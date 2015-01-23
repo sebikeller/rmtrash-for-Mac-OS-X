@@ -16,9 +16,9 @@ Open a terminal and type
 ```
 cd /path/to/clone/to/
 git clone https://github.com/beatjunky99/rmtrash-for-Mac-OS-X.git
-cd rmtrash/rmtrash
+cd rmtrash
 ```
-- OS X 10.0+: `make`
+- OS X 10.0+: `cd rmtrash && make`
 - OS X 10.4+: `sudo xcodebuild install -project rmtrash\ \(no\ arc\).xcodeproj/`
 - OS X 10.6+: `sudo xcodebuild install -project rmtrash.xcodeproj/`
 
