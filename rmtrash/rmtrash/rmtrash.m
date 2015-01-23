@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
 				return 0;
 				break;
 			case 'v':
-				printf("rmtrash version 0.3.3\n\tCopyright 2003 Night Productions\n\n");
+				printf("rmtrash version 0.3.4\n\tCopyright 2003 Night Productions\n\tCopyright 2015 sebikeller\n\n");
 				NSAutoreleasePoolReleaseExit
 				return 0;
 				break;
