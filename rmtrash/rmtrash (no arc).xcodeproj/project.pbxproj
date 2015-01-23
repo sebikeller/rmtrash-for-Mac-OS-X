@@ -100,7 +100,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 865D12981A70F78800B5EBD9 /* Build configuration list for PBXProject "rmtrash" */;
+			buildConfigurationList = 865D12981A70F78800B5EBD9 /* Build configuration list for PBXProject "rmtrash (no arc)" */;
 			compatibilityVersion = "Xcode 3.1";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -206,7 +206,8 @@
 		865D12A51A70F78800B5EBD9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -214,7 +215,8 @@
 		865D12A61A70F78800B5EBD9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				CLANG_ENABLE_OBJC_ARC = NO;
+				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -222,7 +224,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		865D12981A70F78800B5EBD9 /* Build configuration list for PBXProject "rmtrash" */ = {
+		865D12981A70F78800B5EBD9 /* Build configuration list for PBXProject "rmtrash (no arc)" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				865D12A21A70F78800B5EBD9 /* Debug */,
