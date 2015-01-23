@@ -15,7 +15,7 @@ Install
 Open a terminal and type
 ```
 $ cd /path/to/clone/to/
-$ git clone git@github.com:beatjunky99/rmtrash-for-Mac-OS-X.git
+$ git clone https://github.com/beatjunky99/rmtrash-for-Mac-OS-X.git
 $ cd rmtrash/rmtrash
 ```
 - OS X 10.0+: `$ make`
