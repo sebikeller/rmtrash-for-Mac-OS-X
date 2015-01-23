@@ -1,0 +1,29 @@
+.TH RMTRASH 1 "20 August 2003" "rmtrash 0.3.1" "BSD General Commands Manual"
+.SH NAME
+rmtrash \- move files to the trash
+.SH SYNOPSIS
+.B rmtrash
+[\fI-u USERNAME\fR] [\fI-h\fR] [\fI-v\fR] file-name [\fIfile-name\fR]
+.SH DESCRIPTION
+.PP
+This command moves files to the trash rather than removing them totally from the file system.  Very useful if you decide you want that file after all...
+.TP
+\fB\-u\fR \fIUSERNAME\fR
+an optional argument.  This will move the file to the specified user's trash. Note that you need sufficient privileges to accomplish this.
+.TP
+\fB\-h\fR
+displays a small help screen displaying these options.
+.TP
+\fB\-v\fR
+prints out version info on \fBrmtrash\fR.
+.SH BUGS
+Not directly related to \fBrmtrash\fR; the trash can icon will not display that there is trash in it if it was empty and you used this command to place something there.  It will stay empty until you throw something away in the Finder.
+.SH AUTHOR
+Written by Darkshadow <darkshadow02@mac.com>
+.SH COPYRIGHT
+Copyright \(co 2003 Night Productions.
+.br
+This is free software.  There is NO warranty; not even for merchantability or fitness for a particular purpose.
+.SH "SEE ALSO"
+.BR rm (1),
+.BR rmdir (1)
