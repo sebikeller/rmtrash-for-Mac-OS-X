@@ -8,4 +8,4 @@ obliterating the file (as rm does).
 
 All credit to: [nightproductions.net][1]
 
-[1]: <http://www.nightproductions.net/cli.htm >
+[1]: http://www.nightproductions.net/cli.htm
