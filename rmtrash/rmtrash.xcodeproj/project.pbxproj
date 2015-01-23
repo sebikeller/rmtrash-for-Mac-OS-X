@@ -8,15 +8,17 @@
 
 /* Begin PBXBuildFile section */
 		860341AB1A72656600DDF211 /* rmtrash.m in Sources */ = {isa = PBXBuildFile; fileRef = 860341AA1A72656600DDF211 /* rmtrash.m */; };
+		860341AC1A72969600DDF211 /* rmtrash.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 860341A91A722CC600DDF211 /* rmtrash.1 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		865D129B1A70F78800B5EBD9 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
+			dstPath = /usr/share/man/man1;
 			dstSubfolderSpec = 0;
 			files = (
+				860341AC1A72969600DDF211 /* rmtrash.1 in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
