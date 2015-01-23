@@ -15,7 +15,7 @@
 		865D129B1A70F78800B5EBD9 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1;
+			dstPath = /usr/local/share/man/man1;
 			dstSubfolderSpec = 0;
 			files = (
 				860341AC1A72969600DDF211 /* rmtrash.1 in CopyFiles */,
