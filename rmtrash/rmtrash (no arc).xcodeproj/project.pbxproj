@@ -41,6 +41,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		8287D38B1A73E0FC007F44A9 /* New Group */ = {
+			isa = PBXGroup;
+			children = (
+				860341AA1A72656600DDF211 /* rmtrash.m */,
+			);
+			name = "New Group";
+			sourceTree = "<group>";
+		};
 		865D12941A70F78800B5EBD9 = {
 			isa = PBXGroup;
 			children = (
@@ -60,7 +68,7 @@
 		865D129F1A70F78800B5EBD9 /* rmtrash */ = {
 			isa = PBXGroup;
 			children = (
-				860341AA1A72656600DDF211 /* rmtrash.m */,
+				8287D38B1A73E0FC007F44A9 /* New Group */,
 				860341A91A722CC600DDF211 /* rmtrash.1 */,
 			);
 			path = rmtrash;
@@ -92,6 +100,7 @@
 		865D12951A70F78800B5EBD9 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				BuildIndependentTargetsInParallel = NO;
 				LastUpgradeCheck = 0610;
 				ORGANIZATIONNAME = sebikeller;
 				TargetAttributes = {
@@ -102,7 +111,6 @@
 			};
 			buildConfigurationList = 865D12981A70F78800B5EBD9 /* Build configuration list for PBXProject "rmtrash (no arc)" */;
 			compatibilityVersion = "Xcode 3.1";
-			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
@@ -147,6 +155,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEPLOYMENT_LOCATION = YES;
 				DEPLOYMENT_POSTPROCESSING = YES;
 				DSTROOT = /;
@@ -170,7 +179,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx;
+				SDKROOT = macosx10.1.5;
 			};
 			name = Debug;
 		};
@@ -209,7 +218,7 @@
 				INSTALL_PATH = /usr/local/bin;
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				MTL_ENABLE_DEBUG_INFO = NO;
-				SDKROOT = macosx;
+				SDKROOT = macosx10.1.5;
 			};
 			name = Release;
 		};
