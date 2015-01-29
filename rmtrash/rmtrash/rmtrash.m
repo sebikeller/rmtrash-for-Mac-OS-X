@@ -55,109 +55,130 @@
 #endif
 
 #define manager [NSFileManager defaultManager]
+#define ERROR_MESSAGE_KEY @"message"
 
-NSString *trashFileName(NSString *fileName) {
-	NSString *ext = [[fileName lastPathComponent] pathExtension];
-	NSDateFormatter *df = nil;
-	BOOL dfIsNewStyle = NO;
+NSString *getTrashFilePath(NSString* userString, NSString *fileName, NSError **error) {
+	BOOL wantsErrorInfo = !!error;
 	
-	if ([NSDateFormatter instancesRespondToSelector:@selector(stringFromDate:)]) {
-		// Woohoo!! We can use the new 10.4 behavior
-		df = NSAutorelease([[NSDateFormatter alloc] init]);
-		if ([df respondsToSelector:@selector(setFormatterBehavior:)]) {
-			[df setFormatterBehavior:NSDateFormatterBehavior10_4];
+	fileName = [[NSString stringWithFormat:@"~%@/.Trash/%@", (userString?:@""), [fileName lastPathComponent]] stringByExpandingTildeInPath];
+	
+	if (![manager fileExistsAtPath:[[NSString stringWithFormat:@"~%@/.Trash", (userString?:@"")] stringByExpandingTildeInPath]]) {
+		if (wantsErrorInfo) {
+			*error = [NSError errorWithDomain:nil code:1 userInfo:[NSDictionary dictionaryWithObject:[NSString stringWithFormat:@"%@: Unknown user!\n",(userString?:@"")] forKey:ERROR_MESSAGE_KEY]];
 		}
-		[df setDateFormat:@"HH-mm-ss"];
-		
-		dfIsNewStyle = YES;
-	} else {
-		// Fallback to old NSDateFormatter behavior
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-		df = NSAutorelease([[NSDateFormatter alloc] initWithDateFormat:@"%H-%M-%S" allowNaturalLanguage:YES]);
-#pragma GCC diagnostic pop
+		return nil;
 	}
 	
-	NSString *copyName;
-	BOOL first = YES;
-	do {
-		if (!first) {
-			if (dfIsNewStyle) {
-				[df setDateFormat:@"HH-mm-ss-SSS"];
-			} else {
+	if (![manager fileExistsAtPath:fileName]) {
+		
+		NSString *ext = [[fileName lastPathComponent] pathExtension];
+		NSDateFormatter *df = nil;
+		BOOL dfIsNewStyle = NO;
+		
+		if ([NSDateFormatter instancesRespondToSelector:@selector(stringFromDate:)]) {
+			// Woohoo!! We can use the new 10.4 behavior
+			df = NSAutorelease([[NSDateFormatter alloc] init]);
+			if ([df respondsToSelector:@selector(setFormatterBehavior:)]) {
+				[df setFormatterBehavior:NSDateFormatterBehavior10_4];
+			}
+			[df setDateFormat:@"HH-mm-ss"];
+			
+			dfIsNewStyle = YES;
+		} else {
+			// Fallback to old NSDateFormatter behavior
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-				df = NSAutorelease([[NSDateFormatter alloc] initWithDateFormat:@"%H-%M-%S-%F" allowNaturalLanguage:YES]);
+			df = NSAutorelease([[NSDateFormatter alloc] initWithDateFormat:@"%H-%M-%S" allowNaturalLanguage:YES]);
 #pragma GCC diagnostic pop
+		}
+		
+		BOOL first = YES;
+		NSString *copyName;
+		do {
+			if (!first) {
+				if (dfIsNewStyle) {
+					[df setDateFormat:@"HH-mm-ss-SSS"];
+				} else {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+					df = NSAutorelease([[NSDateFormatter alloc] initWithDateFormat:@"%H-%M-%S-%F" allowNaturalLanguage:YES]);
+#pragma GCC diagnostic pop
+				}
 			}
-		}
-
-		NSString *dateString = @"";
-		NSDate *date = [NSDate date];
-		if (dfIsNewStyle) {
-			dateString = [df stringFromDate:date];
-		} else {
-			dateString = [df stringForObjectValue:date];
-		}
-		
-		if ([ext length] > 0) {
-			NSString *tempName = [fileName substringWithRange:NSMakeRange(0, ([fileName length] - ([ext length] + 1)))];
-			copyName = [NSString stringWithFormat:@"%@ %@.%@", tempName, dateString, ext];
-		} else {
-			copyName = [NSString stringWithFormat:@"%@ %@", fileName, dateString];
-		}
-		
-		first = NO;
-	} while ([manager fileExistsAtPath:copyName]);
-	
-	return copyName;
+			
+			NSString *dateString = @"";
+			NSDate *date = [NSDate date];
+			if (dfIsNewStyle) {
+				dateString = [df stringFromDate:date];
+			} else {
+				dateString = [df stringForObjectValue:date];
+			}
+			
+			if ([ext length] > 0) {
+				NSString *tempName = [fileName substringWithRange:NSMakeRange(0, ([fileName length] - ([ext length] + 1)))];
+				copyName = [NSString stringWithFormat:@"%@ %@.%@", tempName, dateString, ext];
+			} else {
+				copyName = [NSString stringWithFormat:@"%@ %@", fileName, dateString];
+			}
+			
+			first = NO;
+		} while ([manager fileExistsAtPath:copyName]);
+		fileName = copyName;
+	}
+	return fileName;
 }
 
-void move_to_trash(NSString *userString, NSString *aFile) {
-	NSString *fileString = aFile, *trashPath = nil;
-	unichar firstChar = [fileString characterAtIndex:0];
+void moveFileToUserTrash(NSString *userString, NSString *filePath) {
+	NSString *trashFilePath = nil;
+	filePath = [filePath stringByExpandingTildeInPath];
 	
-	if (firstChar == '~') { // TODO: Why not always expand??
-		fileString = [aFile stringByExpandingTildeInPath];
-	}
-	
-	if (![manager fileExistsAtPath:fileString]) {
-		printf("%s: File or directory does not exist.\n", [fileString UTF8String]);
+	if (![manager fileExistsAtPath:filePath]) {
+		printf("%s: File or directory does not exist.\n", [filePath UTF8String]);
 		return;
 	}
 	
-	trashPath = [[NSString stringWithFormat:@"~%@/.Trash/%@", userString, [fileString lastPathComponent]] stringByExpandingTildeInPath];
+	//new trash method always puts item into current users trash, so dont use it when user set.
+	//but supports put back via cmd+Z in Finder
+	BOOL useNewTrashMethod = !userString && [manager respondsToSelector:@selector(trashItemAtURL:resultingItemURL:error:)];
 	
-	if (![manager fileExistsAtPath:[[NSString stringWithFormat:@"~%@/.Trash", userString] stringByExpandingTildeInPath]]) {
-		printf("%s: Unknown user!\n",[userString UTF8String]);
-		return;
-	}
-	if ([manager fileExistsAtPath:trashPath]) {
-		trashPath = trashFileName(trashPath);
+	if (!useNewTrashMethod) {
+		NSError* error = nil;
+		trashFilePath = getTrashFilePath(userString, filePath, &error);
+		if (error) {
+			printf("%s", [[[error userInfo] objectForKey:ERROR_MESSAGE_KEY] UTF8String]);
+			return;
+		}
 	}
 	
 	BOOL moveResult = YES;
-	if ([manager respondsToSelector:@selector(moveItemAtURL:toURL:error:)]) {
-		moveResult = [manager moveItemAtURL:[NSURL fileURLWithPath:fileString] toURL:[NSURL fileURLWithPath:trashPath] error:nil];
+	
+	if (useNewTrashMethod) {
+		NSURL* movedURL = nil;
+		moveResult = [manager trashItemAtURL:[NSURL fileURLWithPath:filePath] resultingItemURL:&movedURL error:nil];
+		trashFilePath = [movedURL path];
+	} else if ([manager respondsToSelector:@selector(moveItemAtURL:toURL:error:)]) {
+		moveResult = [manager moveItemAtURL:[NSURL fileURLWithPath:filePath] toURL:[NSURL fileURLWithPath:trashFilePath] error:nil];
 	} else {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 		// Fallback to now deprecated method
-		moveResult = [manager movePath:fileString toPath:trashPath handler:nil];
+		moveResult = [manager movePath:filePath toPath:trashFilePath handler:nil];
 #pragma GCC diagnostic pop
 	}
 	
 	if (!moveResult) {
-		printf("Could not move \"%s\" to the trash!\n\t(Perhaps you don't have sufficient privileges?)\n\n", [fileString UTF8String]);
-		if ([manager fileExistsAtPath:trashPath]) {
+		printf("Could not move \"%s\" to the trash!\n\t(Perhaps you don't have sufficient privileges?)\n\n", [filePath UTF8String]);
+		
+		//if file was moved to trash but operation failed, try to remove it
+		if ([manager fileExistsAtPath:trashFilePath]) {
 			
 			if ([manager respondsToSelector:@selector(removeItemAtURL:error:)]) {
-				[manager removeItemAtURL:[NSURL fileURLWithPath:trashPath] error:nil];
+				[manager removeItemAtURL:[NSURL fileURLWithPath:trashFilePath] error:nil];
 			} else {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 				// Fallback to now deprecated method
-				[manager removeFileAtPath:trashPath handler:nil];
+				[manager removeFileAtPath:trashFilePath handler:nil];
 #pragma GCC diagnostic pop
 			}
 		}
@@ -167,7 +188,7 @@ void move_to_trash(NSString *userString, NSString *aFile) {
 
 int main(int argc, char *argv[]) {
 	NSAutoreleasePoolInit
-	NSString *file, *userStr = @"";
+	NSString *file, *userStr = nil;
 	int c, i;
 	
 	if (argc == 1) {
@@ -205,7 +226,7 @@ int main(int argc, char *argv[]) {
 	
 	for (i = optind; i < argc; i++) {
 		file = [NSString stringWithUTF8String:argv[i]];
-		move_to_trash(userStr, file);
+		moveFileToUserTrash(userStr, file);
 		file = nil;
 	}
 	
