@@ -10,6 +10,7 @@
 
 #import <Foundation/Foundation.h>
 #import <unistd.h>
+#import <getopt.h>
 
 #ifndef __has_feature
 #define __has_feature(x) 0
@@ -54,6 +55,13 @@
 
 #endif
 
+#define MY_PRINT(_fmt, ...) printf("%s: " _fmt, getprogname(), ##__VA_ARGS__)
+#define EXIT_USAGE_FAILURE do {\
+printf("USAGE: %s [-h] [-v] [-u USERNAME] FILENAME\n", argv[0]); \
+NSAutoreleasePoolReleaseExit \
+return 1;\
+}while(0);
+
 #define manager [NSFileManager defaultManager]
 #define ERROR_MESSAGE_KEY @"message"
 
@@ -64,7 +72,7 @@ NSString *getTrashFilePath(NSString* userString, NSString *fileName, NSError **e
 	
 	if (![manager fileExistsAtPath:[[NSString stringWithFormat:@"~%@/.Trash", (userString?:@"")] stringByExpandingTildeInPath]]) {
 		if (wantsErrorInfo) {
-			*error = [NSError errorWithDomain:nil code:1 userInfo:[NSDictionary dictionaryWithObject:[NSString stringWithFormat:@"%@: Unknown user!\n",(userString?:@"")] forKey:ERROR_MESSAGE_KEY]];
+			*error = [NSError errorWithDomain:@"" code:1 userInfo:[NSDictionary dictionaryWithObject:[NSString stringWithFormat:@"%@: Unknown user!",(userString?:@"")] forKey:ERROR_MESSAGE_KEY]];
 		}
 		return nil;
 	}
@@ -128,13 +136,15 @@ NSString *getTrashFilePath(NSString* userString, NSString *fileName, NSError **e
 	return fileName;
 }
 
-void moveFileToUserTrash(NSString *userString, NSString *filePath) {
+BOOL moveFileToUserTrash(NSString *userString, NSString *filePath, BOOL showErrors) {
 	NSString *trashFilePath = nil;
 	filePath = [filePath stringByExpandingTildeInPath];
 	
 	if (![manager fileExistsAtPath:filePath]) {
-		printf("%s: File or directory does not exist.\n", [filePath UTF8String]);
-		return;
+		if(showErrors){
+			MY_PRINT("%s: File or directory does not exist.\n", [filePath UTF8String]);
+		}
+		return NO;
 	}
 	
 	//new trash method always puts item into current users trash, so dont use it when user set.
@@ -145,8 +155,10 @@ void moveFileToUserTrash(NSString *userString, NSString *filePath) {
 		NSError* error = nil;
 		trashFilePath = getTrashFilePath(userString, filePath, &error);
 		if (error) {
-			printf("%s", [[[error userInfo] objectForKey:ERROR_MESSAGE_KEY] UTF8String]);
-			return;
+			if(showErrors){
+				MY_PRINT("%s", [[[error userInfo] objectForKey:ERROR_MESSAGE_KEY] UTF8String]);
+			}
+			return NO;
 		}
 	}
 	
@@ -167,7 +179,9 @@ void moveFileToUserTrash(NSString *userString, NSString *filePath) {
 	}
 	
 	if (!moveResult) {
-		printf("Could not move \"%s\" to the trash!\n\t(Perhaps you don't have sufficient privileges?)\n\n", [filePath UTF8String]);
+		if(showErrors){
+			MY_PRINT("Could not move \"%s\" to the trash!\n\t(Perhaps you don't have sufficient privileges?)\n", [filePath UTF8String]);
+		}
 		
 		//if file was moved to trash but operation failed, try to remove it
 		if ([manager fileExistsAtPath:trashFilePath]) {
@@ -182,54 +196,73 @@ void moveFileToUserTrash(NSString *userString, NSString *filePath) {
 #pragma GCC diagnostic pop
 			}
 		}
-		return;
+		return NO;
 	}
+	return YES;
 }
 
 int main(int argc, char *argv[]) {
 	NSAutoreleasePoolInit
 	NSString *file, *userStr = nil;
-	int c, i;
+	int c, i, rval = 0;
+	BOOL showErrors = YES, hasMovedFile = NO, dotDirWarningPrinted = NO;
 	
 	if (argc == 1) {
-		printf("USAGE: %s [-h] [-v] [-u USERNAME] FILENAME\n\n", argv[0]);
-		NSAutoreleasePoolReleaseExit
-		return 1;
+		EXIT_USAGE_FAILURE;
 	}
 	
-	while ((c = getopt(argc, argv, "u:hv")) != EOF) {
+	while ((c = getopt(argc, argv, "u:hvdfiPRr")) != EOF) {
 		switch (c) {
 			case 'u':
 				userStr = [NSString stringWithUTF8String:optarg];
 				break;
 			case 'h':
-				printf("rmtrash options:\n\n");
-				printf("\t-u USERNAME\tmove the file to some other user's trash.\n");
-				printf("\t\t\t(note that you need sufficient privileges to do this.)\n");
-				printf("\t-h\t\tthis screen\n");
-				printf("\t-v\t\tprint out version info\n\n");
+				puts("rmtrash options:\n");
+				puts("\t-u USERNAME\tmove the file to some other user's trash.");
+				puts("\t\t\t(note that you need sufficient privileges to do this.)");
+				puts("\t-h\t\tthis screen");
+				puts("\t-v\t\tprint out version info");
 				NSAutoreleasePoolReleaseExit
-				return 0;
+				return rval;
 				break;
 			case 'v':
-				printf("rmtrash version 0.3.4\n\tCopyright 2003 Night Productions\n\tCopyright 2015 Sebastian Keller\n\n");
+				puts("rmtrash version 0.3.5\n\tCopyright 2003\t\tNight Productions\n\tCopyright 2015-2016\tSebastian Keller");
 				NSAutoreleasePoolReleaseExit
-				return 0;
+				return rval;
+				break;
+			case 'f':
+				showErrors = NO;
+				break;
+			case 'd':
+			case 'i':
+			case 'P':
+			case 'R':
+			case 'r':
+				//ignore rm options, except -W, since -W option of rm wants to undelete
 				break;
 			default:
-				printf("USAGE: %s [-h] [-v] [-u USERNAME] FILENAME\n\n",argv[0]);
-				NSAutoreleasePoolReleaseExit
-				return 0;
+				EXIT_USAGE_FAILURE;
 				break;
 		}
 	}
 	
 	for (i = optind; i < argc; i++) {
 		file = [NSString stringWithUTF8String:argv[i]];
-		moveFileToUserTrash(userStr, file);
+		if([file isEqualToString:@"."] || [file isEqualToString:@".."]){
+			if(!dotDirWarningPrinted){
+				dotDirWarningPrinted = YES;
+				MY_PRINT("\".\" and \"..\" may not be removed\n");
+				rval = 1;
+			}
+		} else {
+			hasMovedFile = moveFileToUserTrash(userStr, file, showErrors);
+			if(showErrors && !hasMovedFile){
+				rval = 1;
+			}
+		}
 		file = nil;
 	}
 	
 	NSAutoreleasePoolReleaseFinal
-	return 0;
+	return rval;
 }
