@@ -220,6 +220,7 @@ int main(int argc, char *argv[]) {
 				puts("rmtrash options:\n");
 				puts("\t-u USERNAME\tmove the file to some other user's trash.");
 				puts("\t\t\t(note that you need sufficient privileges to do this.)");
+				puts("\t-f\t\tsuppress output and ignore errors");
 				puts("\t-h\t\tthis screen");
 				puts("\t-v\t\tprint out version info");
 				NSAutoreleasePoolReleaseExit
